@@ -1,0 +1,10 @@
+pl\umcs\lisowska\model\enums\TransactionType.class
+pl\umcs\lisowska\repositories\AccountRepository.class
+pl\umcs\lisowska\repositories\TransactionRepository.class
+pl\umcs\lisowska\model\enums\TransactionStatus.class
+pl\umcs\lisowska\model\Transaction.class
+pl\umcs\lisowska\services\AccountService.class
+pl\umcs\lisowska\AccountingManager.class
+pl\umcs\lisowska\services\TransactionService.class
+pl\umcs\lisowska\controller\TransactionController.class
+pl\umcs\lisowska\controller\AccountController.class

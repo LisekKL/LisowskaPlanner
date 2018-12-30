@@ -1,0 +1,6 @@
+pl\umcs\lisowska\ToDoManager.class
+pl\umcs\lisowska\repository\ToDoItemRepository.class
+pl\umcs\lisowska\model\enums\ToDoPriority.class
+pl\umcs\lisowska\model\ToDoItem.class
+pl\umcs\lisowska\controller\ToDoController.class
+pl\umcs\lisowska\services\ToDoService.class
