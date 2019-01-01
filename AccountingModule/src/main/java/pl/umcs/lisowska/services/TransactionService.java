@@ -18,29 +18,23 @@ public class TransactionService {
     }
 
     public Transaction saveTransaction(Transaction transaction) {
-        Transaction savedTransaction = transactionRepository.save(transaction);
 
-        return savedTransaction;
+        return transactionRepository.save(transaction);
     }
 
     public List<Transaction> findAllTransactions() {
         Iterable<Transaction> transactionsIterable = transactionRepository.findAll();
-        List<Transaction> users = (List<Transaction>) transactionsIterable;
 
-        return users;
+        return (List<Transaction>) transactionsIterable;
     }
 
     public Transaction findTransactionById(Long id) {
         Optional<Transaction> transaction = transactionRepository.findById(id);
-        if (transaction.isPresent()) {
-            return transaction.get();
-        }
-        return null;
+        return transaction.orElse(null);
     }
 
     public Transaction updateTransaction(Transaction transaction) {
-        Transaction updatedTransaction = transactionRepository.save(transaction);
-        return updatedTransaction;
+        return transactionRepository.save(transaction);
     }
 
     public void deleteTransaction(Long id) {

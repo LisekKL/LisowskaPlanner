@@ -6,10 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.umcs.lisowska.common.Account;
+import pl.umcs.lisowska.common.User;
 import pl.umcs.lisowska.model.Transaction;
 import pl.umcs.lisowska.model.enums.TransactionStatus;
 import pl.umcs.lisowska.services.AccountService;
 import pl.umcs.lisowska.services.TransactionService;
+import pl.umcs.lisowska.services.UserService;
 
 import java.util.List;
 
@@ -25,47 +27,60 @@ public class AccountController {
 
     private final AccountService accountService;
     private final TransactionService transactionService;
+    private final UserService userService;
 
     @Autowired
-    public AccountController(AccountService accountService, TransactionService transactionService) {
+    public AccountController(AccountService accountService, TransactionService transactionService, UserService userService) {
         this.accountService = accountService;
         this.transactionService = transactionService;
+        this.userService = userService;
     }
 
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    public List<Account> getAccounts() {
-        List<Account> accounts = accountService.findAllAccounts();
+    public String invalidPath() {
+        return "Please supply a user ID! A valid path should contain: /accounts/{userId}/";
+    }
 
-        log.info("Retrieve objects {}", accounts);
+    @GetMapping(produces = APPLICATION_JSON_VALUE, path = "/{userId}")
+    public List<Account> getAccounts(@PathVariable String userId) {
+        //List<Account> accounts = accountService.findAllAccountsForUser(userId);
+        User user = userService.find(Long.parseLong(userId));
+
+        List<Account> accounts = accountService.findAllAccountsForUser(Long.parseLong(userId));
+        log.info("User id: " + userId + " | Accounts: {}", accounts);
 
         return accounts;
     }
 
-    @PostMapping(consumes = APPLICATION_JSON_VALUE)
-    public Account saveAccount(@RequestBody Account account) {
-        Account savedAccount = accountService.saveAccount(account);
+    @PostMapping(consumes = APPLICATION_JSON_VALUE, path = "/{userId}")
+    public Account saveAccount(@PathVariable String userId, @RequestBody Account accountRequest) {
+        User user = userService.find(Long.parseLong(userId));
+        accountRequest.setUser(user);
+        Account savedAccount = accountService.saveAccount(accountRequest);
 
-        log.info("Add account {}", savedAccount);
+        log.info("Added account {}", savedAccount);
 
         return savedAccount;
     }
 
-    @GetMapping("/{id}")
-    public Account findAccountById(@PathVariable Long id) {
-        return accountService.findAccountById(id);
-    }
+//    @GetMapping("/{id}")
+//    public Account findAccountById(@PathVariable Long id) {
+//        return accountService.findAccountById(id);
+//    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity deleteAccount(@PathVariable Long id) {
         accountService.deleteAccount(id);
 
-        log.info("Delete account with id {}", id);
+        log.info("Deleted account with id {}", id);
 
         return new ResponseEntity(NO_CONTENT);
     }
 
-    @PutMapping(consumes = APPLICATION_JSON_VALUE)
-    public Account updateAccount(@RequestBody Account account) {
+    @PutMapping(consumes = APPLICATION_JSON_VALUE, path = "/{userId}")
+    public Account updateAccount(@PathVariable String userId, @RequestBody Account account) {
+        User user = userService.find(Long.parseLong(userId));
+        account.setUser(user);
         Account updatedAccount = accountService.updateAccount(account);
 
         log.info("Updated Account {}", updatedAccount);

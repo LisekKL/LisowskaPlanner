@@ -45,11 +45,18 @@ public class UserProvider
     }
 
     public void updateUser(long id) {
-        User updatedInstance = new User(id, "Change", "Updated", 11, MALE);
+        User user = new User();
+        HttpEntity<User> request = new HttpEntity<>(user);
+        ResponseEntity<User> responseUser = restTemplate.exchange(USERS_URL + "/" + id, HttpMethod.GET, request, User.class);
 
-        String entityUrl = USERS_URL + "/" + id;
-        HttpEntity<User> requestUpdate = new HttpEntity<>(updatedInstance);
-        restTemplate.exchange(entityUrl, HttpMethod.PUT, requestUpdate, Void.class);
+        User updatedInstance = responseUser.getBody();
+        if (updatedInstance != null) {
+            updatedInstance.setFirstName("PUT");
+            updatedInstance.setLastName("APP");
+            updatedInstance.setAge(10);
+            request = new HttpEntity<>(updatedInstance);
+            restTemplate.exchange(USERS_URL, HttpMethod.PUT, request, User.class);
+        }
     }
 
     public void deleteUser(long id) {

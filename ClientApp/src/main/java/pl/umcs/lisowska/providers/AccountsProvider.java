@@ -20,11 +20,13 @@ public class AccountsProvider {
     private static String USERS_URL;
     private static String ACCOUNTS_URL;
     private RestTemplate restTemplate = new RestTemplate();
+    private User user;
 
-    public AccountsProvider(long userId){
-        USER_ID = userId;
+    public AccountsProvider(User user){
+        this.user = user;
+        USER_ID = user.getId();
         USERS_URL = "http://localhost:8080/users/" + USER_ID;
-        ACCOUNTS_URL = USERS_URL + "/accounts";
+        ACCOUNTS_URL = "http://localhost:8081/accounts/";
     }
 
     public void addAccount(){
@@ -32,7 +34,7 @@ public class AccountsProvider {
         HttpEntity<User> request = new HttpEntity<>(user);
         ResponseEntity<User> response = restTemplate.exchange(USERS_URL, HttpMethod.GET, request, User.class);
 
-        Account account = new Account(response.getBody());
+        Account account = new Account(user);
         HttpEntity<Account> requestAccount = new HttpEntity<>(account);
         ResponseEntity<Account> responseAccount = restTemplate.exchange(ACCOUNTS_URL, HttpMethod.POST, requestAccount, Account.class);
 
@@ -41,7 +43,7 @@ public class AccountsProvider {
 
     public void fetchAllAccounts() {
         ResponseEntity<List<Account>> response = restTemplate.exchange(
-                ACCOUNTS_URL,
+                ACCOUNTS_URL + "/" + USER_ID,
                 GET,
                 null,
                 new ParameterizedTypeReference<List<Account>>() {
@@ -58,7 +60,7 @@ public class AccountsProvider {
 
         Account updatedInstance = new Account(user);
         HttpEntity<Account> requestUpdate = new HttpEntity<>(updatedInstance);
-        ResponseEntity<Account> responseAccount =restTemplate.exchange(ACCOUNTS_URL + "/" + accountId, HttpMethod.PUT, requestUpdate, Account.class);
+        ResponseEntity<Account> responseAccount = restTemplate.exchange(ACCOUNTS_URL, HttpMethod.PUT, requestUpdate, Account.class);
 
         logger.info("Updated account for user with id " + USER_ID + "{}", responseAccount.getBody());
     }

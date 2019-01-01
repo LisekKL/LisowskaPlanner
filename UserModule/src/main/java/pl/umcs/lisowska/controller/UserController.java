@@ -31,7 +31,7 @@ public class UserController {
     public List<User> getUsers() {
         List<User> users = userService.findAll();
 
-        log.info("Retrieve objects {}", users);
+        log.info("Retrieved users: {}", users);
 
         return users;
     }
@@ -40,7 +40,7 @@ public class UserController {
     public User saveUser(@RequestBody User user) {
         User savedUser = userService.save(user);
 
-        log.info("Add user {}", savedUser);
+        log.info("Added user {}", savedUser);
 
         return savedUser;
     }
@@ -54,12 +54,12 @@ public class UserController {
     public ResponseEntity deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
 
-        log.info("Delete user with id {}", id);
+        log.info("Deleted user with id {}", id);
 
         return new ResponseEntity(NO_CONTENT);
     }
 
-    @PutMapping(path = "/{id}", consumes = APPLICATION_JSON_VALUE)
+    @PutMapping(consumes = APPLICATION_JSON_VALUE)
     public User updateUser(@RequestBody User user) {
         User updatedUser = userService.update(user);
 

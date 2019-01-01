@@ -19,8 +19,8 @@ public class User {
     private String lastName;
     private Integer age;
 
-    @OneToMany(mappedBy = "accountHolder")
-    private List<Account> accounts;
+//    @JsonIgnore
+//    private List<Account> accounts;
 
     @OneToMany(
             mappedBy = "user",
@@ -31,11 +31,6 @@ public class User {
 
     @Enumerated(STRING)
     private Gender gender;
-
-
-    public List<Address> getAddresses(){ return addresses; }
-
-    public List<Account> getAccounts(){ return accounts; }
 
     public User(Long id, String firstName, String lastName, Integer age, Gender gender) {
         this.id = id;
@@ -95,6 +90,18 @@ public class User {
     public void setAddresses(ArrayList<Address> addresses) {
         this.addresses = addresses;
     }
+
+    public List<Address> getAddresses(){ return addresses; }
+
+//    public void setAccounts(List<Account> accounts) {
+//        this.accounts = accounts;
+//    }
+//
+//    public List<Account> getAccounts(){ return accounts; }
+//
+//    public void addAccount(Account account){ accounts.add(account); }
+//
+//    public void resignAccount(Account account){ accounts.remove(account); }
 
     @Override
     public String toString() {
