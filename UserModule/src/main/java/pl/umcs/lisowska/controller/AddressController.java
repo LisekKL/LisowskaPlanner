@@ -6,15 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.umcs.lisowska.common.Address;
-import pl.umcs.lisowska.common.User;
 import pl.umcs.lisowska.services.AddressService;
-import pl.umcs.lisowska.services.UserService;
-
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
 
 @RestController

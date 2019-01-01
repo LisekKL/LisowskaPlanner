@@ -18,26 +18,33 @@ public class Account {
     private String accountNumber;
     private double balance;
 
-    //    RELATIONS
-    @ManyToOne
-    @JoinColumn(name = "holder_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name="user_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnore
-    private User accountHolder;
+    private User user;
 
-    public User getAccountHolder(){
-        return accountHolder;
-    }
-
+    public Account(){}
     public Account(User user){
         countryCode = "PL";
-        accountHolder = user;
-        accountNumber = countryCode + "000011110000" + id;
+        this.user = user;
+        accountNumber = countryCode + "000011110000_" + user.getId();
     }
+//    public Account(long userId){
+//        countryCode = "PL";
+//        //this.userId = userId;
+//        accountNumber = countryCode + "000011110000_" + userId;
+//    }
+
+    public User getUser(){return user;}
+    public void setUser(User user){this.user = user;}
+
+    public String getCountryCode(){return countryCode;}
+    public void setCountryCode(String countryCode){this.countryCode = countryCode;}
+
     public String getAccountNumber() {
         return accountNumber;
     }
-
     public void setAccountNumber(String accountNumber) {
         this.accountNumber = accountNumber;
     }
@@ -45,13 +52,19 @@ public class Account {
     public double getBalance() {
         return balance;
     }
-
     public void setBalance(double balance) {
         this.balance = balance;
     }
 
-    public void setAccountHolder(User accountHolder) {
-        this.accountHolder = accountHolder;
+    public boolean makeWithdrawal(double amount){
+        if(amount > this.balance){ return false; }
+        this.balance -= amount;
+        return true;
+    }
+
+    public boolean makeDeposit(double amount){
+        this.balance += amount;
+        return true;
     }
 
     @Override
@@ -60,7 +73,9 @@ public class Account {
                 "id=" + id +
                 ", countryCode='" + countryCode + '\'' +
                 ", accountNumber='" + accountNumber + '\'' +
-                ", balance=" + balance +
+                ", balance=" + balance + '\'' +
+                ", user=" + user.toString() +
+//                ", userId=" + userId +
                 '}';
     }
 }

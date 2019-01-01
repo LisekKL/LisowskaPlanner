@@ -19,29 +19,31 @@ public class AccountService {
     }
 
     public Account saveAccount(Account account) {
-        Account savedAccount = accountRepository.save(account);
 
-        return savedAccount;
+        return accountRepository.save(account);
     }
 
     public List<Account> findAllAccounts() {
         Iterable<Account> accountsIterable = accountRepository.findAll();
-        List<Account> users = (List<Account>) accountsIterable;
 
-        return users;
+        return (List<Account>) accountsIterable;
     }
+
+    public List<Account> findAllAccountsForUser(Long userId) {
+        Iterable<Account> accountsIterable = accountRepository.findByUserId(userId);
+
+        return (List<Account>) accountsIterable;
+    }
+
+
 
     public Account findAccountById(Long id) {
         Optional<Account> account = accountRepository.findById(id);
-        if (account.isPresent()) {
-            return account.get();
-        }
-        return null;
+        return account.orElse(null);
     }
 
     public Account updateAccount(Account account) {
-        Account updatedAccount = accountRepository.save(account);
-        return updatedAccount;
+        return accountRepository.save(account);
     }
 
     public void deleteAccount(Long id) {

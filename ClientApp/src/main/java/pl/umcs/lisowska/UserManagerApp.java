@@ -14,18 +14,18 @@ public class UserManagerApp {
     private static AccountsProvider accountsProvider;
 
     public static void main(String[] args) {
-        long userUpdateId = 3;
-        long userDeleteId = 2;
+        long userUpdateId = 1;
+        long userDeleteId = 4;
 
         userHandler(userUpdateId, userDeleteId);
 
-        List<User> users = userProvider.fetchAllUsers();
-        for (User usr: users) {
-            accountHandler(usr);
-        }
+//        List<User> users = userProvider.fetchAllUsers();
+//        for (User usr: users) {
+//            accountHandler(usr);
+//        }
     }
 
-    public static void userInit(){
+    private static void userInit(){
         User pawelMickiewicz = new User("Paweł", "Mickiewicz", 21, MALE);
         User janKowalski = new User("Jan", "Kowalski", 33, MALE);
         User ewaKowalska = new User("Ewa", "Kowalska", 29, FEMALE);
@@ -41,7 +41,7 @@ public class UserManagerApp {
         userProvider.addUser(michalAdamczyk);
     }
 
-    public static void userHandler(long userUpdateId, long userDeleteId){
+    private static void userHandler(long userUpdateId, long userDeleteId){
 
         List<User> userList = userProvider.fetchAllUsers();
         if(userList == null || userList.isEmpty()){
@@ -55,9 +55,9 @@ public class UserManagerApp {
         }
     }
 
-    public static void accountHandler(User user){
-        accountsProvider = new AccountsProvider(user.getId());
-        accountsProvider.addAccount();
+    private static void accountHandler(User user){
+        accountsProvider = new AccountsProvider(user);
+        //accountsProvider.addAccount();
         accountsProvider.addAccount();
         accountsProvider.fetchAllAccounts();
     }
