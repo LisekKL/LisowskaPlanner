@@ -1,5 +1,6 @@
 package pl.umcs.lisowska.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import pl.umcs.lisowska.common.Account;
 import pl.umcs.lisowska.model.enums.TransactionStatus;
 import pl.umcs.lisowska.model.enums.TransactionType;
@@ -16,10 +17,12 @@ public class Transaction {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_account_id")
+    @JsonIgnore
     private Account sender;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipient_account_id")
+    @JsonIgnore
     private Account recipient;
 
     @NotNull
@@ -38,7 +41,7 @@ public class Transaction {
 
     public Transaction(){
         this.transactionDate = new Date();
-        this.status = TransactionStatus.ERROR;
+        this.status = TransactionStatus.STARTED;
     }
     public Transaction(Account sender, Account recipient, double amount){
         this.transactionDate = new Date();
@@ -103,4 +106,20 @@ public class Transaction {
     public void setSender(Account sender) {
         this.sender = sender;
     }
+
+    public Long getId(){return this.id;}
+//    @Override
+//    public String toString() {
+//        return "User{" +
+//                "id=" + id +
+//                ", transactionDate='" + transactionDate + '\'' +
+//                ", amount='" + amount + '\'' +
+//                ", status=" + status +
+//                ", type=" + type +
+//                ", description=" + description +
+//                ", sender_account_id=" + sender.getId() +
+//                ", recipient_account_id=" + recipient.getId() +
+//                '}';
+//    }
+
 }

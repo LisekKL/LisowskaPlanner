@@ -9,7 +9,7 @@ import java.util.Date;
 public class ToDoItem {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long Id;
+    private Long id;
 
     private String description;
     private Date dueDate;
@@ -43,4 +43,14 @@ public class ToDoItem {
     public void setPriority(ToDoPriority priority) {
         this.priority = priority;
     }
+
+//    @Override
+//    public String toString() {
+//        return "ToDoItem{" +
+//                "id=" + id +
+//                ", description='" + description + '\'' +
+//                ", priority='" + priority + '\'' +
+//                ", dueDate=" + dueDate +
+//                '}';
+//    }
 }

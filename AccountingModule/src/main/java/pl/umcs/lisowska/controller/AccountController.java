@@ -1,18 +1,24 @@
 package pl.umcs.lisowska.controller;
 
+import com.netflix.discovery.EurekaClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 import pl.umcs.lisowska.common.Account;
 import pl.umcs.lisowska.common.User;
 import pl.umcs.lisowska.model.Transaction;
 import pl.umcs.lisowska.model.enums.TransactionStatus;
+import pl.umcs.lisowska.model.enums.TransactionType;
 import pl.umcs.lisowska.services.AccountService;
 import pl.umcs.lisowska.services.TransactionService;
-import pl.umcs.lisowska.services.UserService;
 
+import java.util.Date;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.NO_CONTENT;
@@ -26,35 +32,57 @@ public class AccountController {
     private static final Logger log = LoggerFactory.getLogger(AccountController.class);
 
     private final AccountService accountService;
-    private final TransactionService transactionService;
-    private final UserService userService;
 
     @Autowired
-    public AccountController(AccountService accountService, TransactionService transactionService, UserService userService) {
+    private EurekaClient discoveryClient;
+    @Autowired
+    private TransactionService transactionService;
+
+    @Autowired
+    public AccountController(AccountService accountService, EurekaClient discoveryClient, TransactionService transactionService) {
         this.accountService = accountService;
+        this.discoveryClient = discoveryClient;
         this.transactionService = transactionService;
-        this.userService = userService;
+    }
+
+    @Bean
+    private RestTemplate restTemplate() {
+        return new RestTemplate();
     }
 
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    public String invalidPath() {
-        return "Please supply a user ID! A valid path should contain: /accounts/{userId}/";
-    }
+    public List<Account> getAccountsForUser(@RequestParam("userId") long userId) {
+        if (userId < 1) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User ID has to be a valid number >= 1!");
+        }
 
-    @GetMapping(produces = APPLICATION_JSON_VALUE, path = "/{userId}")
-    public List<Account> getAccounts(@PathVariable String userId) {
-        //List<Account> accounts = accountService.findAllAccountsForUser(userId);
-        User user = userService.find(Long.parseLong(userId));
+        String url = discoveryClient.getNextServerFromEureka("users", false).getHomePageUrl();
+        ResponseEntity<User> response = restTemplate().getForEntity(url + "users/" + userId, User.class);
+        User user = response.getBody();
 
-        List<Account> accounts = accountService.findAllAccountsForUser(Long.parseLong(userId));
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!");
+        }
+        List<Account> accounts = accountService.findAllAccountsForUser(user.getId());
         log.info("User id: " + userId + " | Accounts: {}", accounts);
 
         return accounts;
     }
 
+    @GetMapping(produces = APPLICATION_JSON_VALUE, path = "/{accountId}")
+    public Account getAccountById(@PathVariable long accountId) {
+        return accountService.findAccountById(accountId);
+    }
+
     @PostMapping(consumes = APPLICATION_JSON_VALUE, path = "/{userId}")
-    public Account saveAccount(@PathVariable String userId, @RequestBody Account accountRequest) {
-        User user = userService.find(Long.parseLong(userId));
+    public Account saveAccount(@PathVariable long userId, @RequestBody Account accountRequest) {
+        //long userId = accountRequest.getUser().getId();
+        String url = discoveryClient.getNextServerFromEureka("users", false).getHomePageUrl();
+        ResponseEntity<User> response = restTemplate().getForEntity(url + "users/" + userId, User.class);
+        User user = response.getBody();
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!");
+        }
         accountRequest.setUser(user);
         Account savedAccount = accountService.saveAccount(accountRequest);
 
@@ -63,13 +91,8 @@ public class AccountController {
         return savedAccount;
     }
 
-//    @GetMapping("/{id}")
-//    public Account findAccountById(@PathVariable Long id) {
-//        return accountService.findAccountById(id);
-//    }
-
     @DeleteMapping("/{id}")
-    public ResponseEntity deleteAccount(@PathVariable Long id) {
+    public ResponseEntity deleteAccount(@PathVariable long id) {
         accountService.deleteAccount(id);
 
         log.info("Deleted account with id {}", id);
@@ -78,8 +101,12 @@ public class AccountController {
     }
 
     @PutMapping(consumes = APPLICATION_JSON_VALUE, path = "/{userId}")
-    public Account updateAccount(@PathVariable String userId, @RequestBody Account account) {
-        User user = userService.find(Long.parseLong(userId));
+    public Account updateAccount(@RequestBody Account account, @PathVariable long userId) {
+        //long userId = account.getUser().getId();
+        String url = discoveryClient.getNextServerFromEureka("users", false).getHomePageUrl();
+        ResponseEntity<User> response = restTemplate().getForEntity(url + "users/" + userId, User.class);
+        User user = response.getBody();
+        if (user == null) { throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"); }
         account.setUser(user);
         Account updatedAccount = accountService.updateAccount(account);
 
@@ -88,43 +115,34 @@ public class AccountController {
         return updatedAccount;
     }
 
-    private void makeSubtraction(Account sender, Account recipient, double amount) throws Exception {
-        if(amount > sender.getBalance()){
-            throw new Exception("Balance from sender is too low! Please choose a different amount or add money to account " + sender.getAccountNumber());
+    @PostMapping(produces = APPLICATION_JSON_VALUE, path = "/{senderId}/transaction")
+    public Transaction makeTransaction(@PathVariable long senderId, @RequestParam("recipientId") long recipientId, @RequestParam("amount") double amount){
+        Account sender = accountService.findAccountById(senderId);
+        Account recipient = accountService.findAccountById(recipientId);
+
+        if(sender == null || recipient == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Sender or recipient not found!");
         }
         Transaction transaction = new Transaction(sender, recipient, amount);
-        transaction.setStatus(TransactionStatus.STARTED);
-
+        transaction.setType(TransactionType.EXPENSE);
+        transaction.setStatus(TransactionStatus.ONGOING);
+        transaction.setTransactionDate(new Date());
         transaction = transactionService.saveTransaction(transaction);
 
-        subtractMoney(sender, amount);
-        addMoney(recipient, amount);
+        try {
+            sender.makeWithdrawal(amount);
+            recipient.makeDeposit(amount);
+        }catch(Exception ex){
+            transaction.setStatus(TransactionStatus.ERROR);
+            transaction.setTransactionDate(new Date());
+            transactionService.updateTransaction(transaction);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error during transaction: " + ex.getMessage());
+        }
 
         transaction.setStatus(TransactionStatus.COMPLETED);
+        transaction.setTransactionDate(new Date());
         transactionService.updateTransaction(transaction);
 
-        log.info("[TRANSACTION] Transferred [] from acc. nr. [] to ", amount, sender.getAccountNumber(), recipient.getAccountNumber());
+        return transactionService.saveTransaction(transaction);
     }
-
-    private void subtractMoney(Account account, double amount){
-        account.setBalance(account.getBalance() - amount);
-    }
-    private void addMoney(Account account, double amount){
-        account.setBalance(account.getBalance() + amount);
-
-        log.info("Added [] to account number []. Remaining balance: ", amount, account.getAccountNumber(), account.getBalance());
-    }
-
-/*    @PutMapping(consumes = APPLICATION_JSON_VALUE)
-    public boolean executeTransaction(Account account, Transaction transaction){
-        if(transaction.getType() == TransactionType.EXPENSE) {
-            try {
-                makeSubtraction(account, transaction.getAmount());
-            } catch (Exception e) {
-                log.info("Error executing transaction: ", e.getMessage());
-                return false;
-            }
-        }
-        return true;
-    }*/
 }

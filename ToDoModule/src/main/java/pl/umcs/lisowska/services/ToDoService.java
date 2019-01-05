@@ -18,30 +18,24 @@ public class ToDoService {
     }
 
     public ToDoItem saveToDo(ToDoItem item) {
-        ToDoItem savedItem = toDoItemRepository.save(item);
 
-        return savedItem;
+        return toDoItemRepository.save(item);
     }
 
     public List<ToDoItem> findAllToDoItems() {
         Iterable<ToDoItem> itemsIterable = toDoItemRepository.findAll();
-        List<ToDoItem> items = (List<ToDoItem>) itemsIterable;
 
-        return items;
+        return (List<ToDoItem>) itemsIterable;
     }
 
     public ToDoItem findToDoById(Long id) {
         Optional<ToDoItem> item = toDoItemRepository.findById(id);
-        if (item.isPresent()) {
-            return item.get();
-        }
-        return null;
+        return item.orElse(null);
     }
 
     public ToDoItem updateToDo(ToDoItem item) {
-        ToDoItem updatedItem = toDoItemRepository.save(item);
 
-        return updatedItem;
+        return toDoItemRepository.save(item);
     }
 
     public void deleteToDo(Long id) {
