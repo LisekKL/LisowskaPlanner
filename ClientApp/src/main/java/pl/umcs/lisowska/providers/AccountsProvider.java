@@ -12,7 +12,7 @@ import pl.umcs.lisowska.common.User;
 
 import java.util.List;
 
-import static org.springframework.http.HttpMethod.*;
+import static org.springframework.http.HttpMethod.GET;
 
 public class AccountsProvider {
     private static final Logger logger = LoggerFactory.getLogger(UserProvider.class);
@@ -24,21 +24,26 @@ public class AccountsProvider {
 
     public AccountsProvider(User user){
         this.user = user;
+
         USER_ID = user.getId();
         USERS_URL = "http://localhost:8080/users/" + USER_ID;
-        ACCOUNTS_URL = "http://localhost:8081/accounts/";
+        ACCOUNTS_URL = "http://localhost:8081/accounts";
     }
 
     public void addAccount(){
         User user = new User();
-        HttpEntity<User> request = new HttpEntity<>(user);
-        ResponseEntity<User> response = restTemplate.exchange(USERS_URL, HttpMethod.GET, request, User.class);
+        HttpEntity<User> requestUser = new HttpEntity<>(user);
+        ResponseEntity<User> responseUser = restTemplate.exchange(USERS_URL, HttpMethod.GET, requestUser, User.class);
 
-        Account account = new Account(user);
-        HttpEntity<Account> requestAccount = new HttpEntity<>(account);
-        ResponseEntity<Account> responseAccount = restTemplate.exchange(ACCOUNTS_URL, HttpMethod.POST, requestAccount, Account.class);
+        if(responseUser.getBody() != null) {
+            Account account = new Account(responseUser.getBody());
+            HttpEntity<Account> requestAccount = new HttpEntity<>(account);
+            ResponseEntity<Account> responseAccount = restTemplate.exchange(ACCOUNTS_URL + "/" + responseUser.getBody().getId(), HttpMethod.POST, requestAccount, Account.class);
 
-        logger.info("[addAccount] Created account " + account, responseAccount.getBody());
+            logger.info("[addAccount] Created account " + account, responseAccount.getBody());
+        }else {
+            logger.info("[addAccount] Account NOT CREATED! User not found! ");
+        }
     }
 
     public void fetchAllAccounts() {
@@ -60,7 +65,7 @@ public class AccountsProvider {
 
         Account updatedInstance = new Account(user);
         HttpEntity<Account> requestUpdate = new HttpEntity<>(updatedInstance);
-        ResponseEntity<Account> responseAccount = restTemplate.exchange(ACCOUNTS_URL, HttpMethod.PUT, requestUpdate, Account.class);
+        ResponseEntity<Account> responseAccount = restTemplate.exchange(ACCOUNTS_URL + "/" + user.getId(), HttpMethod.PUT, requestUpdate, Account.class);
 
         logger.info("Updated account for user with id " + USER_ID + "{}", responseAccount.getBody());
     }

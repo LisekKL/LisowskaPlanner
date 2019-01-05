@@ -14,7 +14,7 @@
     <module>ToDoModule</module>
     <module>CommonModule</module>
     <module>ClientApp</module>
-      <module>EurekaServerModule</module>
+    <module>EurekaServerModule</module>
   </modules>
 
   <name>PlannerApplication</name>

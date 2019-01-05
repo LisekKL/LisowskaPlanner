@@ -1,6 +1,10 @@
 package pl.umcs.lisowska;
 
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import pl.umcs.lisowska.common.User;
+import pl.umcs.lisowska.common.enums.Gender;
 import pl.umcs.lisowska.providers.AccountsProvider;
 import pl.umcs.lisowska.providers.UserProvider;
 
@@ -9,20 +13,25 @@ import java.util.List;
 import static pl.umcs.lisowska.common.enums.Gender.FEMALE;
 import static pl.umcs.lisowska.common.enums.Gender.MALE;
 
+@SpringBootApplication
+@EnableDiscoveryClient
 public class UserManagerApp {
     private static UserProvider userProvider = new UserProvider();
     private static AccountsProvider accountsProvider;
+    private static final long userUpdateId = 1;
+    private static final long userDeleteId = 3;
 
     public static void main(String[] args) {
-        long userUpdateId = 1;
-        long userDeleteId = 4;
+        //userInit();
+        //updateUser();
+        //deleteUser();
 
-        userHandler(userUpdateId, userDeleteId);
+        List<User> users = userProvider.fetchAllUsers();
+        for (User usr: users) {
+            accountHandler(usr);
+        }
 
-//        List<User> users = userProvider.fetchAllUsers();
-//        for (User usr: users) {
-//            accountHandler(usr);
-//        }
+        SpringApplication.run(UserManagerApp.class, args);
     }
 
     private static void userInit(){
@@ -40,24 +49,30 @@ public class UserManagerApp {
         userProvider.addUser(magdaPawlak);
         userProvider.addUser(michalAdamczyk);
     }
+    private static void addUser(){
+        User user = new User("POST", "APP", 18, Gender.MALE);
+        userProvider.addUser(user);
+    }
 
-    private static void userHandler(long userUpdateId, long userDeleteId){
-
-        List<User> userList = userProvider.fetchAllUsers();
-        if(userList == null || userList.isEmpty()){
-            System.out.println("[CLIENT] Empty list! Commencing initiation...");
-            userInit();
+    private static void updateUser(){
+        if(userProvider.getUserById(userUpdateId) == null){
+            System.out.println("[APP] User for update with id " + userUpdateId + " was not found! Update aborted...");
         }else {
             userProvider.updateUser(userUpdateId);
-            userProvider.fetchAllUsers();
+        }
+    }
+
+    private static void deleteUser(){
+        if(userProvider.getUserById(userDeleteId) == null) {
+            System.out.println("[APP] User for update with id " + userUpdateId + " was not found! Update aborted...");
+        }else{
             userProvider.deleteUser(userDeleteId);
-            userProvider.fetchAllUsers();
         }
     }
 
     private static void accountHandler(User user){
         accountsProvider = new AccountsProvider(user);
-        //accountsProvider.addAccount();
+        accountsProvider.addAccount();
         accountsProvider.addAccount();
         accountsProvider.fetchAllAccounts();
     }

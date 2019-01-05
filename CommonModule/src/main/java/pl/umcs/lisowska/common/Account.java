@@ -18,7 +18,7 @@ public class Account {
     private String accountNumber;
     private double balance;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name="user_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnore
@@ -67,15 +67,19 @@ public class Account {
         return true;
     }
 
+    public Long getId(){ return this.id; }
+
     @Override
     public String toString() {
-        return "Account{" +
-                "id=" + id +
+        String str = "Account{";
+        if(id != null) {
+            str += "id=" + id + "\n, ";
+        }
+        str += "user_id='" + user.getId() + '\'' +
                 ", countryCode='" + countryCode + '\'' +
                 ", accountNumber='" + accountNumber + '\'' +
                 ", balance=" + balance + '\'' +
-                ", user=" + user.toString() +
-//                ", userId=" + userId +
                 '}';
+        return str;
     }
 }

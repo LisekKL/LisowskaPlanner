@@ -1,7 +1,0 @@
-pl\umcs\lisowska\repository\AddressRepository.class
-pl\umcs\lisowska\services\AddressService.class
-pl\umcs\lisowska\repository\UserRepository.class
-pl\umcs\lisowska\UserManager.class
-pl\umcs\lisowska\services\UserService.class
-pl\umcs\lisowska\controller\AddressController.class
-pl\umcs\lisowska\controller\UserController.class
